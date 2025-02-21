@@ -1,2 +1,2 @@
-python3 ./scripts/check_aws_credentials.py
+aws s3 sync s3://cpr-production-document-cache/concepts ./s3-concepts
 fastapi run server.py --port 8080
