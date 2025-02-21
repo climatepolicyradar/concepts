@@ -26,7 +26,8 @@ app = FastAPI(title="Concepts API", lifespan=lifespan)
 @router.get("/search")
 async def search_concepts(q: Optional[str] = None, limit: int = 10):
     if not q:
-        query = """
+        result = conn.execute(
+            """
             SELECT
                 wikibase_id,
                 preferred_label,
@@ -37,9 +38,12 @@ async def search_concepts(q: Optional[str] = None, limit: int = 10):
                 labelled_passages
             FROM concepts
             LIMIT ?
-            """
+            """,
+            [limit],
+        )
     else:
-        query = """
+        result = conn.execute(
+            """
             SELECT
                 wikibase_id,
                 preferred_label,
@@ -51,9 +55,9 @@ async def search_concepts(q: Optional[str] = None, limit: int = 10):
             FROM concepts
             WHERE preferred_label ILIKE ?
             LIMIT ?
-            """
-
-    result = conn.execute(query, [f"{q}%", limit])
+            """,
+            [f"{q}%", limit],
+        )
 
     columns = [desc[0] for desc in result.description]
     return [dict(zip(columns, row)) for row in result.fetchall()]
