@@ -2,12 +2,14 @@
 #    uv export --no-hashes
 annotated-types==0.7.0
 anyio==4.8.0
+awscli==1.37.25
 boto3==1.36.25
 botocore==1.36.25
 certifi==2025.1.31
 click==8.1.8
-colorama==0.4.6 ; sys_platform == 'win32'
+colorama==0.4.6
 dnspython==2.7.0
+docutils==0.16
 duckdb==1.2.0
 email-validator==2.2.0
 fastapi==0.115.8
@@ -27,6 +29,7 @@ mdurl==0.1.2
 pastedeploy==3.1.0
 plaster==1.1.2
 plaster-pastedeploy==1.0.1
+pyasn1==0.6.1
 pydantic==2.10.6
 pydantic-core==2.27.2
 pygments==2.19.1
@@ -37,6 +40,7 @@ python-multipart==0.0.20
 pyyaml==6.0.2
 rich==13.9.4
 rich-toolkit==0.13.2
+rsa==4.7.2
 s3transfer==0.11.2
 setuptools==75.8.0
 shellingham==1.5.4
