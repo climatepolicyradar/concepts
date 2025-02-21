@@ -9,4 +9,5 @@ run:
   pre-run:
     - pip3 install -r requirements.txt
     - python3 ./scripts/fetch_concepts_from_s3.py
+    - python3 ./scripts/create_duckdb.py
   command: fastapi run server.py --port 8080
