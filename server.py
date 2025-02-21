@@ -1,20 +1,14 @@
-from wsgiref.simple_server import make_server
-from pyramid.config import Configurator
-from pyramid.response import Response
-import os
+from fastapi import FastAPI, HTTPException
 
-def hello_world(request):
-    name = os.environ.get('NAME')
-    if name == None or len(name) == 0:
-        name = "world"
-    message = "Hello, " + name + "!\n"
-    return Response(message)
+app = FastAPI()
 
-if __name__ == '__main__':
-    port = 8080
-    with Configurator() as config:
-        config.add_route('hello', '/')
-        config.add_view(hello_world, route_name='hello')
-        app = config.make_wsgi_app()
-    server = make_server('0.0.0.0', port, app)
-    server.serve_forever()
+@app.get("/")
+async def root():
+    return {"message": "Hello World"}
+
+@app.get("/health")
+async def health_check():
+    try:
+        return {"status": "healthy"}
+    except Exception:
+        raise HTTPException(status_code=500, detail="Database connection failed") 
