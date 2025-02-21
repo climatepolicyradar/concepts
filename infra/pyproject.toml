@@ -1,0 +1,13 @@
+[project]
+name = "infra"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "James Gorrie",email = "james.gorrie@climatepolicyradar.org"}
+]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pulumi (>=3.150.0,<4.0.0)",
+    "pulumi-aws (>=6.69.0,<7.0.0)"
+]

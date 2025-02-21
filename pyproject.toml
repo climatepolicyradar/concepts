@@ -9,5 +9,7 @@ dependencies = [
     "boto3>=1.36.25",
     "duckdb>=1.2.0",
     "fastapi[standard]>=0.115.8",
+    "pulumi>=3.150.0",
+    "pulumi-aws>=6.69.0",
     "pyramid>=2.0.2",
 ]
