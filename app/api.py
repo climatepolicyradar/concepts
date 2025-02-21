@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 
 import duckdb
-from fastapi import FastAPI, HTTPException
+from fastapi import APIRouter, FastAPI, HTTPException
 
 # Global connection variable
 conn = None
@@ -18,10 +18,11 @@ async def lifespan(app: FastAPI):
         conn.close()
 
 
-app = FastAPI(title="Concepts API", lifespan=lifespan, prefix="/concepts")
+router = APIRouter(prefix="/concepts")
+app = FastAPI(title="Concepts API", lifespan=lifespan)
 
 
-@app.get("/{concept_id}")
+@router.get("/{concept_id}")
 async def get_concept(concept_id: str):
     # Get column names from description
     result = conn.execute(
@@ -79,7 +80,7 @@ async def get_concept(concept_id: str):
     return {"concept": concept, "related_concepts": related, "subconcepts": subconcepts}
 
 
-@app.get("/search")
+@router.get("/search")
 async def search_concepts(q: str, limit: int = 10):
     if not q:
         query = """
@@ -115,10 +116,13 @@ async def search_concepts(q: str, limit: int = 10):
     return [dict(zip(columns, row)) for row in result.fetchall()]
 
 
-@app.get("/health")
+@router.get("/health")
 async def health_check():
     try:
         conn.execute("SELECT 1").fetchone()
         return {"status": "healthy"}
     except Exception:
         raise HTTPException(status_code=500, detail="Database connection failed")
+
+
+app.include_router(router)
