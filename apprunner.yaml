@@ -6,6 +6,7 @@ build:
       - pip3 install -r requirements.txt
 run:
   runtime-version: 3.11
-  pre-run:  
+  pre-run:
     - pip3 install -r requirements.txt
+    - python3 ./scripts/fetch_concepts_from_s3.py
   command: fastapi run server.py --port 8080
