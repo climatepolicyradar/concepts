@@ -4,3 +4,6 @@ concepts.db
 push_to_ecr.sh
 infra/
 .python-version
+.trunk/
+.venv/
+.poetry/
