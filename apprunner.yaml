@@ -8,6 +8,4 @@ run:
   runtime-version: 3.11
   pre-run:
     - pip3 install -r requirements.txt
-    - mkdir s3-concepts
-    - aws s3 sync s3://cpr-production-document-cache/concepts ./s3-concepts
   command: ./entrypoint.sh
