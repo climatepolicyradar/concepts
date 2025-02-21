@@ -18,10 +18,10 @@ async def lifespan(app: FastAPI):
         conn.close()
 
 
-app = FastAPI(title="Concepts API", lifespan=lifespan)
+app = FastAPI(title="Concepts API", lifespan=lifespan, prefix="/concepts")
 
 
-@app.get("/concepts/{concept_id}")
+@app.get("/{concept_id}")
 async def get_concept(concept_id: str):
     # Get column names from description
     result = conn.execute(
