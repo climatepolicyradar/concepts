@@ -3,7 +3,7 @@ import json
 
 import duckdb
 
-json_files = glob.glob("s3-concepts/concepts/*.json")
+json_files = glob.glob("s3-concepts/*.json")
 
 con = duckdb.connect("concepts.db")
 con.execute(
