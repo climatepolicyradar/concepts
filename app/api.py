@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from typing import Optional
 
 import duckdb
 from fastapi import APIRouter, FastAPI, HTTPException
@@ -23,7 +24,7 @@ app = FastAPI(title="Concepts API", lifespan=lifespan)
 
 
 @router.get("/search")
-async def search_concepts(q: str, limit: int = 10):
+async def search_concepts(q: Optional[str] = None, limit: int = 10):
     if not q:
         query = """
             SELECT
