@@ -1,8 +1,8 @@
 version: 1.0
-runtime: python311
+runtime: python3
 build:
   commands:
     build:
-      - pip3 install -r requirements.txt
+      - pip install -r requirements.txt
 run:
-  command: python3 server.py
+  command: python server.py
