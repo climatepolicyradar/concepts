@@ -22,6 +22,42 @@ router = APIRouter(prefix="/concepts")
 app = FastAPI(title="Concepts API", lifespan=lifespan)
 
 
+@router.get("/search")
+async def search_concepts(q: str, limit: int = 10):
+    if not q:
+        query = """
+            SELECT
+                wikibase_id,
+                preferred_label,
+                alternative_labels,
+                negative_labels,
+                description,
+                definition,
+                labelled_passages
+            FROM concepts
+            LIMIT ?
+            """
+    else:
+        query = """
+            SELECT
+                wikibase_id,
+                preferred_label,
+                alternative_labels,
+                negative_labels,
+                description,
+                definition,
+                labelled_passages
+            FROM concepts
+            WHERE preferred_label ILIKE ?
+            LIMIT ?
+            """
+
+    result = conn.execute(query, [f"{q}%", limit])
+
+    columns = [desc[0] for desc in result.description]
+    return [dict(zip(columns, row)) for row in result.fetchall()]
+
+
 @router.get("/{concept_id}")
 async def get_concept(concept_id: str):
     # Get column names from description
@@ -78,42 +114,6 @@ async def get_concept(concept_id: str):
     ]
 
     return {"concept": concept, "related_concepts": related, "subconcepts": subconcepts}
-
-
-@router.get("/search")
-async def search_concepts(q: str, limit: int = 10):
-    if not q:
-        query = """
-            SELECT
-                wikibase_id,
-                preferred_label,
-                alternative_labels,
-                negative_labels,
-                description,
-                definition,
-                labelled_passages
-            FROM concepts
-            LIMIT ?
-            """
-    else:
-        query = """
-            SELECT
-                wikibase_id,
-                preferred_label,
-                alternative_labels,
-                negative_labels,
-                description,
-                definition,
-                labelled_passages
-            FROM concepts
-            WHERE preferred_label ILIKE ?
-            LIMIT ?
-            """
-
-    result = conn.execute(query, [f"{q}%", limit])
-
-    columns = [desc[0] for desc in result.description]
-    return [dict(zip(columns, row)) for row in result.fetchall()]
 
 
 @router.get("/health")
