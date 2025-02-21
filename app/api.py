@@ -95,19 +95,19 @@ async def search_concepts(q: str, limit: int = 10):
             LIMIT ?
             """
     else:
-        """
-        SELECT
-            wikibase_id,
-            preferred_label,
-            alternative_labels,
-            negative_labels,
-            description,
-            definition,
-            labelled_passages
-        FROM concepts
-        WHERE preferred_label ILIKE ?
-        LIMIT ?
-        """
+        query = """
+            SELECT
+                wikibase_id,
+                preferred_label,
+                alternative_labels,
+                negative_labels,
+                description,
+                definition,
+                labelled_passages
+            FROM concepts
+            WHERE preferred_label ILIKE ?
+            LIMIT ?
+            """
 
     result = conn.execute(query, [f"{q}%", limit])
 
