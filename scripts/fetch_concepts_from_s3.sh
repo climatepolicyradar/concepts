@@ -1,0 +1,1 @@
+aws s3 sync s3://cpr-production-document-cache/concepts ./s3-concepts
