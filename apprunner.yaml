@@ -6,10 +6,6 @@ build:
       - pip3 install -r requirements.txt
 run:
   runtime-version: 3.11
-  secrets:
-    - name: AWS_ACCESS_KEY_ID
-      value-from: arn:aws:iam::532586131621:role/apprunner-concepts-api-instance-role
   pre-run:
     - pip3 install -r requirements.txt
-    - python3 ./scripts/check_aws_credentials.py
-  command: fastapi run server.py --port 8080
+  command: ./scripts/check_aws_credentials.py && fastapi run server.py --port 8080
