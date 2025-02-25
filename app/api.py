@@ -19,8 +19,16 @@ async def lifespan(app: FastAPI):
         conn.close()
 
 
-router = APIRouter(prefix="/concepts")
-app = FastAPI(title="Concepts API", lifespan=lifespan)
+router = APIRouter(
+    prefix="/concepts",
+)
+app = FastAPI(
+    title="Concepts API",
+    lifespan=lifespan,
+    docs_url="/concepts/docs",  # Docs will be available at /router_prefix/docs after mounting
+    redoc_url="/concepts/redoc",
+    openapi_url="/concepts/openapi.json",
+)
 
 
 @router.get("/search")
