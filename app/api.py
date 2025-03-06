@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from typing import List, Optional
 
 import duckdb
-from fastapi import APIRouter, FastAPI, HTTPException
+from fastapi import APIRouter, FastAPI, HTTPException, Query
 
 # Global connection variable
 conn = None
@@ -72,7 +72,7 @@ async def search_concepts(q: Optional[str] = None, limit: int = 10):
 
 
 @router.get("/batch_search")
-async def batch_search_concepts(ids: List[str]):
+async def batch_search_concepts(ids: Optional[List[str]] = None):
     """Search for multiple concepts by their wikibase IDs.
 
     :param ids: List[str] List of wikibase IDs to search for
@@ -81,6 +81,7 @@ async def batch_search_concepts(ids: List[str]):
     :return: List of found concepts (may be empty if no matches)
     :rtype: List[dict]
     """
+    ids = Query(default=None, description="List of wikibase IDs to search for")(ids)
     if not ids:
         raise HTTPException(status_code=400, detail="No IDs provided")
 
@@ -97,14 +98,10 @@ async def batch_search_concepts(ids: List[str]):
             FROM concepts
             WHERE wikibase_id = ANY(?)
         """
-
         result = conn.execute(query, [ids])
-
         columns = [desc[0] for desc in result.description]
         matches = [dict(zip(columns, row)) for row in result.fetchall()]
-
         return matches or []
-
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database query failed: {str(e)}")
 
