@@ -71,6 +71,44 @@ async def search_concepts(q: Optional[str] = None, limit: int = 10):
     return [dict(zip(columns, row)) for row in result.fetchall()]
 
 
+@router.get("/batch_search")
+async def batch_search_concepts(ids: List[str]):
+    """Search for multiple concepts by their wikibase IDs.
+
+    :param ids: List[str] List of wikibase IDs to search for
+    :type ids: List[str]
+    :raises HTTPException: If no IDs provided or database error
+    :return: List of found concepts (may be empty if no matches)
+    :rtype: List[dict]
+    """
+    if not ids:
+        raise HTTPException(status_code=400, detail="No IDs provided")
+
+    try:
+        query = """
+            SELECT
+                wikibase_id,
+                preferred_label,
+                alternative_labels,
+                negative_labels,
+                description,
+                definition,
+                labelled_passages
+            FROM concepts
+            WHERE wikibase_id = ANY(?)
+        """
+
+        result = conn.execute(query, [ids])
+
+        columns = [desc[0] for desc in result.description]
+        matches = [dict(zip(columns, row)) for row in result.fetchall()]
+
+        return matches or []
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database query failed: {str(e)}")
+
+
 @router.get("/{concept_id}")
 async def get_concept(concept_id: str):
     # Get column names from description
@@ -136,44 +174,6 @@ async def health_check():
         return {"status": "healthy"}
     except Exception:
         raise HTTPException(status_code=500, detail="Database connection failed")
-
-
-@router.get("/batch_search")
-async def batch_search_concepts(ids: List[str]):
-    """Search for multiple concepts by their wikibase IDs.
-
-    :param ids: List[str] List of wikibase IDs to search for
-    :type ids: List[str]
-    :raises HTTPException: If no IDs provided or database error
-    :return: List of found concepts (may be empty if no matches)
-    :rtype: List[dict]
-    """
-    if not ids:
-        raise HTTPException(status_code=400, detail="No IDs provided")
-
-    try:
-        query = """
-            SELECT
-                wikibase_id,
-                preferred_label,
-                alternative_labels,
-                negative_labels,
-                description,
-                definition,
-                labelled_passages
-            FROM concepts
-            WHERE wikibase_id = ANY(?)
-        """
-
-        result = conn.execute(query, [ids])
-
-        columns = [desc[0] for desc in result.description]
-        matches = [dict(zip(columns, row)) for row in result.fetchall()]
-
-        return matches or []  # Ensure we return empty list rather than None
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database query failed: {str(e)}")
 
 
 app.include_router(router)
