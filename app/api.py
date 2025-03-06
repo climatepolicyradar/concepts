@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from typing import Optional, List
+from typing import List, Optional
 
 import duckdb
 from fastapi import APIRouter, FastAPI, HTTPException
@@ -142,10 +142,10 @@ async def health_check():
 async def batch_search_concepts(ids: List[str]):
     """Search for multiple concepts by their wikibase IDs.
 
-    :param ids: List of wikibase IDs to search for
+    :param ids: List[str] List of wikibase IDs to search for
     :type ids: List[str]
     :raises HTTPException: If no IDs are provided
-    :return: List of concepts matching the provided IDs
+    :return: List of found concepts (may be empty if no matches)
     :rtype: List[dict]
     """
     if not ids:
@@ -167,7 +167,9 @@ async def batch_search_concepts(ids: List[str]):
     result = conn.execute(query, [ids])
 
     columns = [desc[0] for desc in result.description]
-    return [dict(zip(columns, row)) for row in result.fetchall()]
+    matches = [dict(zip(columns, row)) for row in result.fetchall()]
+
+    return matches  # Returns empty list if no matches found
 
 
 app.include_router(router)
