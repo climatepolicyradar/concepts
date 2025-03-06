@@ -1,12 +1,13 @@
 from contextlib import asynccontextmanager
 from typing import List, Optional
-
+import logging
 import duckdb
-from fastapi import APIRouter, FastAPI, HTTPException
+from fastapi import APIRouter, FastAPI, HTTPException, Query
 
 # Global connection variable
 conn = None
 
+_LOGGER = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -73,17 +74,17 @@ async def search_concepts(q: Optional[str] = None, limit: int = 10):
 
 @router.get("/batch_search")
 async def batch_search_concepts(
-    ids: Optional[List[str]] = None
+    ids: List[str] = Query(default=[])
 ):
     """Search for multiple concepts by their wikibase IDs.
 
     :param ids: List of wikibase IDs to search for
-    :type ids: Optional[List[str]]
+    :type ids: List[str]
     :raises HTTPException: If no IDs provided or database error
     :return: List of found concepts (may be empty if no matches)
     :rtype: List[dict]
     """
-    ids = ids or []
+    _LOGGER.info(f"🔍 Searching for {len(ids)} concepts")
     if not ids:
         raise HTTPException(status_code=400, detail="No IDs provided")
 
@@ -98,11 +99,19 @@ async def batch_search_concepts(
                 definition,
                 labelled_passages
             FROM concepts
-            WHERE wikibase_id = ANY(?)
+            WHERE wikibase_id IN (?)
         """
         result = conn.execute(query, [ids])
         columns = [desc[0] for desc in result.description]
         matches = [dict(zip(columns, row)) for row in result.fetchall()]
+
+        # Log missing IDs for debugging
+        found_ids = {match['wikibase_id'] for match in matches}
+        missing_ids = set(ids) - found_ids
+
+        if missing_ids:
+            _LOGGER.warning(f"🕵️ Missing IDs: {missing_ids}")
+
         return matches or []
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database query failed: {str(e)}")
