@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from typing import Optional, List
+from typing import List, Optional
 
 import duckdb
 from fastapi import APIRouter, FastAPI, HTTPException
@@ -144,30 +144,36 @@ async def batch_search_concepts(ids: List[str]):
 
     :param ids: List of wikibase IDs to search for
     :type ids: List[str]
-    :raises HTTPException: If no IDs are provided
-    :return: List of concepts matching the provided IDs
+    :raises HTTPException: If no IDs provided or database error
+    :return: List of found concepts (may be empty if no matches)
     :rtype: List[dict]
     """
     if not ids:
         raise HTTPException(status_code=400, detail="No IDs provided")
 
-    query = """
-        SELECT
-            wikibase_id,
-            preferred_label,
-            alternative_labels,
-            negative_labels,
-            description,
-            definition,
-            labelled_passages
-        FROM concepts
-        WHERE wikibase_id IN (SELECT unnest(?))
-    """
+    try:
+        query = """
+            SELECT
+                wikibase_id,
+                preferred_label,
+                alternative_labels,
+                negative_labels,
+                description,
+                definition,
+                labelled_passages
+            FROM concepts
+            WHERE wikibase_id = ANY(?)
+        """
 
-    result = conn.execute(query, [ids])
+        result = conn.execute(query, [ids])
 
-    columns = [desc[0] for desc in result.description]
-    return [dict(zip(columns, row)) for row in result.fetchall()]
+        columns = [desc[0] for desc in result.description]
+        matches = [dict(zip(columns, row)) for row in result.fetchall()]
+
+        return matches or []  # Ensure we return empty list rather than None
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database query failed: {str(e)}")
 
 
 app.include_router(router)
