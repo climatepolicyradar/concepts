@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from typing import List, Optional
 
 import duckdb
-from fastapi import APIRouter, FastAPI, HTTPException, Query
+from fastapi import APIRouter, FastAPI, HTTPException
 
 # Global connection variable
 conn = None
@@ -72,16 +72,18 @@ async def search_concepts(q: Optional[str] = None, limit: int = 10):
 
 
 @router.get("/batch_search")
-async def batch_search_concepts(ids: Optional[List[str]] = None):
+async def batch_search_concepts(
+    ids: Optional[List[str]] = None
+):
     """Search for multiple concepts by their wikibase IDs.
 
-    :param ids: List[str] List of wikibase IDs to search for
-    :type ids: List[str]
+    :param ids: List of wikibase IDs to search for
+    :type ids: Optional[List[str]]
     :raises HTTPException: If no IDs provided or database error
     :return: List of found concepts (may be empty if no matches)
     :rtype: List[dict]
     """
-    ids = Query(default=None, description="List of wikibase IDs to search for")(ids)
+    ids = ids or []
     if not ids:
         raise HTTPException(status_code=400, detail="No IDs provided")
 
