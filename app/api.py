@@ -142,7 +142,7 @@ async def health_check():
 async def batch_search_concepts(ids: List[str]):
     """Search for multiple concepts by their wikibase IDs.
 
-    :param ids: List of wikibase IDs to search for
+    :param ids: List[str] List of wikibase IDs to search for
     :type ids: List[str]
     :raises HTTPException: If no IDs provided or database error
     :return: List of found concepts (may be empty if no matches)
