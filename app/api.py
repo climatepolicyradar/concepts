@@ -90,12 +90,15 @@ async def batch_search_concepts(dto: BatchSearchModel = Depends()):
     :return: List of found concepts (may be empty if no matches)
     :rtype: List[dict]
     """
-    _LOGGER.info(f"🔍 Searching for {len(dto.ids)} concepts")
+    print(f"🔍 Searching for {len(dto.ids)} concepts")
     if not dto.ids:
         raise HTTPException(status_code=400, detail="No IDs provided")
 
+    print(dto.ids)
     try:
-        query = """
+        # Use string concatenation to create the IN clause
+        placeholders = ",".join([f"'{id}'" for id in dto.ids])
+        query = f"""
             SELECT
                 wikibase_id,
                 preferred_label,
@@ -105,9 +108,9 @@ async def batch_search_concepts(dto: BatchSearchModel = Depends()):
                 definition,
                 labelled_passages
             FROM concepts
-            WHERE wikibase_id IN (?)
+            WHERE wikibase_id IN ({placeholders})
         """
-        result = conn.execute(query, [dto.ids])
+        result = conn.execute(query)
         columns = [desc[0] for desc in result.description]
         matches = [dict(zip(columns, row)) for row in result.fetchall()]
 
