@@ -81,7 +81,7 @@ class BatchSearchModel(BaseModel):
 
 
 @router.get("/batch_search")
-async def batch_search_concepts(ids: BatchSearchModel = Depends()):
+async def batch_search_concepts(dto: BatchSearchModel = Depends()):
     """Search for multiple concepts by their wikibase IDs.
 
     :param ids: List of wikibase IDs to search for
@@ -90,8 +90,8 @@ async def batch_search_concepts(ids: BatchSearchModel = Depends()):
     :return: List of found concepts (may be empty if no matches)
     :rtype: List[dict]
     """
-    _LOGGER.info(f"🔍 Searching for {len(ids)} concepts")
-    if not ids:
+    _LOGGER.info(f"🔍 Searching for {len(dto.ids)} concepts")
+    if not dto.ids:
         raise HTTPException(status_code=400, detail="No IDs provided")
 
     try:
@@ -107,13 +107,13 @@ async def batch_search_concepts(ids: BatchSearchModel = Depends()):
             FROM concepts
             WHERE wikibase_id IN (?)
         """
-        result = conn.execute(query, [ids])
+        result = conn.execute(query, [dto.ids])
         columns = [desc[0] for desc in result.description]
         matches = [dict(zip(columns, row)) for row in result.fetchall()]
 
         # Log missing IDs for debugging
         found_ids = {match["wikibase_id"] for match in matches}
-        missing_ids = set(ids) - found_ids
+        missing_ids = set(dto.ids) - found_ids
 
         if missing_ids:
             _LOGGER.warning(f"🕵️ Missing IDs: {missing_ids}")
