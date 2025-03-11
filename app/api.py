@@ -2,16 +2,47 @@ import logging
 from contextlib import asynccontextmanager
 from dataclasses import Field
 from typing import List, Optional
-
+import socket
 import duckdb
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query
 from pydantic import BaseModel, Field
+import os
+from dotenv import load_dotenv, find_dotenv
+
+load_dotenv(find_dotenv())
+
+from opentelemetry import trace
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.trace import Status, StatusCode
+hostname = socket.gethostname()
+
+resource = Resource(
+    attributes={
+        "service.name": os.getenv("OTEL_SERVICE_NAME"),
+        "host.name": hostname,
+        "resource.attributes": os.getenv("OTEL_RESOURCE_ATTRIBUTES"),
+        "service.instance.id": "henry-local"
+    }
+)
+tracer_provider = TracerProvider(resource=resource)
+
+trace.set_tracer_provider(tracer_provider)
+otlp_exporter = OTLPSpanExporter(
+    endpoint=f"{os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")}/v1/traces",
+    headers={"Authorization": f"Basic {os.getenv('OTEL_EXPORTER_OTLP_TOKEN')}"},
+)
+tracer_provider.add_span_processor(BatchSpanProcessor(otlp_exporter))
+
+tracer = trace.get_tracer(__name__)
 
 # Global connection variable
 conn = None
 
 _LOGGER = logging.getLogger(__name__)
-
+_LOGGER.setLevel(logging.DEBUG)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -35,9 +66,20 @@ app = FastAPI(
     openapi_url="/concepts/openapi.json",
 )
 
-
 @router.get("/search")
+@tracer.start_as_current_span("search_concepts")
 async def search_concepts(q: Optional[str] = None, limit: int = 10):
+    span = trace.get_current_span()
+    span.add_event(f"Beginning search for {q}")
+
+    if q and q.startswith("FORCE_ERROR"):
+        try:
+            result = conn.execute("BLEEP BLOOP")
+        except Exception as e:
+            span.set_status(Status(StatusCode.ERROR))
+            span.record_exception(e)
+            raise HTTPException(status_code=500, detail=f"Database query failed: {str(e)}")
+        
     if not q:
         result = conn.execute(
             """
@@ -70,10 +112,18 @@ async def search_concepts(q: Optional[str] = None, limit: int = 10):
             LIMIT ?
             """,
             [f"{q}%", limit],
-        )
+    )
+    all_results = result.fetchall()
+    
+    span.add_event(f"Found {len(all_results)} results")
+    span.set_attribute("query", q)
+    span.set_attribute("limit", limit)
+    span.set_attribute("result_count", len(all_results))
+    span.set_status(Status(StatusCode.OK))
 
     columns = [desc[0] for desc in result.description]
-    return [dict(zip(columns, row)) for row in result.fetchall()]
+    span.add_event(f"Returning {len(columns)} columns")
+    return [dict(zip(columns, row)) for row in all_results]
 
 
 class BatchSearchModel(BaseModel):
@@ -127,6 +177,7 @@ async def batch_search_concepts(dto: BatchSearchModel = Depends()):
 
 
 @router.get("/{concept_id}")
+@tracer.start_as_current_span("get_concept")
 async def get_concept(concept_id: str):
     # Get column names from description
     result = conn.execute(
