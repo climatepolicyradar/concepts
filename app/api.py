@@ -37,40 +37,83 @@ app = FastAPI(
 
 
 @router.get("/search")
-async def search_concepts(q: Optional[str] = None, limit: int = 10):
+async def search_concepts(
+    q: Optional[str] = None, limit: int = 10, has_classifier: bool | None = False
+):
     if not q:
-        result = conn.execute(
-            """
-            SELECT
-                wikibase_id,
-                preferred_label,
-                alternative_labels,
-                negative_labels,
-                description,
-                definition,
-                labelled_passages
-            FROM concepts
-            LIMIT ?
-            """,
-            [limit],
-        )
+        if has_classifier is not None:
+            result = conn.execute(
+                """
+                SELECT
+                    wikibase_id,
+                    preferred_label,
+                    alternative_labels,
+                    negative_labels,
+                    description,
+                    definition,
+                    labelled_passages,
+                    has_classifier,
+                FROM concepts
+                WHERE has_classifier = ?
+                LIMIT ?
+                """,
+                [has_classifier, limit],
+            )
+        else:
+            result = conn.execute(
+                """
+                SELECT
+                    wikibase_id,
+                    preferred_label,
+                    alternative_labels,
+                    negative_labels,
+                    description,
+                    definition,
+                    labelled_passages,
+                    has_classifier,
+                FROM concepts
+                LIMIT ?
+                """,
+                [limit],
+            )
     else:
-        result = conn.execute(
-            """
-            SELECT
-                wikibase_id,
-                preferred_label,
-                alternative_labels,
-                negative_labels,
-                description,
-                definition,
-                labelled_passages
-            FROM concepts
-            WHERE preferred_label ILIKE ?
-            LIMIT ?
-            """,
-            [f"{q}%", limit],
-        )
+        if has_classifier is not None:
+            result = conn.execute(
+                """
+                SELECT
+                    wikibase_id,
+                    preferred_label,
+                    alternative_labels,
+                    negative_labels,
+                    description,
+                    definition,
+                    labelled_passages,
+                    has_classifier,
+                FROM concepts
+                WHERE preferred_label ILIKE ?
+                AND has_classifier = ?
+                LIMIT ?
+                """,
+                [f"{q}%", has_classifier, limit],
+            )
+        else:
+            result = conn.execute(
+                """
+                SELECT
+                    wikibase_id,
+                    preferred_label,
+                    alternative_labels,
+                    negative_labels,
+                    description,
+                    definition,
+                    labelled_passages,
+                    has_classifier,
+                FROM concepts
+                WHERE preferred_label ILIKE ?
+                LIMIT ?
+                """,
+                [f"{q}%", limit],
+            )
 
     columns = [desc[0] for desc in result.description]
     return [dict(zip(columns, row)) for row in result.fetchall()]
@@ -106,7 +149,8 @@ async def batch_search_concepts(dto: BatchSearchModel = Depends()):
                 negative_labels,
                 description,
                 definition,
-                labelled_passages
+                labelled_passages,
+                has_classifier,
             FROM concepts
             WHERE wikibase_id IN ({placeholders})
         """
@@ -138,7 +182,8 @@ async def get_concept(concept_id: str):
             negative_labels,
             description,
             definition,
-            labelled_passages
+            labelled_passages,
+            has_classifier,
         FROM concepts 
         WHERE wikibase_id = ?
     """,

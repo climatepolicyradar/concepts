@@ -3,8 +3,6 @@ import json
 
 import duckdb
 
-json_files = glob.glob("s3-concepts/*.json")
-
 con = duckdb.connect("concepts.db")
 con.execute(
     """
@@ -24,7 +22,8 @@ CREATE TABLE IF NOT EXISTS concepts (
     negative_labels VARCHAR[],
     description VARCHAR,
     definition VARCHAR,
-    labelled_passages JSON
+    labelled_passages JSON,
+    has_classifier BOOLEAN,
 );
 
 -- Relationship tables with unique constraints
@@ -46,15 +45,22 @@ CREATE TABLE IF NOT EXISTS concept_related_relations (
 """
 )
 
+json_files = glob.glob("s3-concepts/*.json")
+
+with open("concepts_with_classifiers.json", "r") as f:
+    targets_with_classifiers = json.load(f)["targets_with_classifiers"]
+
 # First pass: Insert all concepts
 for file_path in json_files:
     with open(file_path, "r") as f:
         data = json.load(f)
 
+    has_classifier = data["wikibase_id"] in targets_with_classifiers
+
     # Insert main concept data with ON CONFLICT DO NOTHING for deduplication
     con.execute(
         """
-        INSERT INTO concepts VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO concepts VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     """,
         (
             data["wikibase_id"],
@@ -64,6 +70,7 @@ for file_path in json_files:
             data["description"],
             data["definition"],
             data["labelled_passages"],
+            has_classifier,
         ),
     )
 
