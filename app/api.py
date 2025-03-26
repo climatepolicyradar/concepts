@@ -147,7 +147,7 @@ class BatchSearchModel(BaseModel):
 
 
 @router.get("/batch_search")
-async def batch_search_concepts(dto: BatchSearchModel = Depends()):
+async def batch_search_concepts(dto: BatchSearchModel = Depends()):  # noqa: B950
     """Search for multiple concepts by their wikibase IDs.
 
     :param ids: List of wikibase IDs to search for
