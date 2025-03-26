@@ -1,6 +1,5 @@
 import logging
 from contextlib import asynccontextmanager
-from dataclasses import Field
 from typing import List, Optional
 
 import duckdb

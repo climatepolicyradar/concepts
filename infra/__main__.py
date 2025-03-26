@@ -2,46 +2,52 @@ import pulumi
 import pulumi_aws as aws
 
 # This potentially shoudl either be somewhere global - or specific for this apprunner instance
-github_connection = aws.apprunner.Connection("github_connection",
+github_connection = aws.apprunner.Connection(
+    "github_connection",
     connection_name="GitHubConnector",
     provider_type="GITHUB",
-    opts = pulumi.ResourceOptions(protect=True))
+    opts=pulumi.ResourceOptions(protect=True),
+)
 
-apprunner_concepts_api_instance_role = aws.iam.Role("apprunner-concepts-api-instance-role",
+apprunner_concepts_api_instance_role = aws.iam.Role(
+    "apprunner-concepts-api-instance-role",
     assume_role_policy={
         "Version": "2012-10-17",
-        "Statement": [{
-            "Action": "sts:AssumeRole",
-            "Effect": "Allow",
-            "Principal": {
-                "Service": "tasks.apprunner.amazonaws.com"
-            },
-            "Sid": ""
-        }]
+        "Statement": [
+            {
+                "Action": "sts:AssumeRole",
+                "Effect": "Allow",
+                "Principal": {"Service": "tasks.apprunner.amazonaws.com"},
+                "Sid": "",
+            }
+        ],
     },
     description="Allows the concepts API to access S3 for the concepts stored there",
-    inline_policies=[{
-        "name": "apprunner-concepts-api-instance-policy",
-        "policy": {
-            "Version": "2012-10-17",
-            "Statement": [{
-                "Action": [
-                    "s3:GetObject",
-                    "s3:ListBucket"
+    inline_policies=[
+        {
+            "name": "apprunner-concepts-api-instance-policy",
+            "policy": {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Action": ["s3:GetObject", "s3:ListBucket"],
+                        "Effect": "Allow",
+                        "Resource": [
+                            "arn:aws:s3:::cpr-production-document-cache",
+                            "arn:aws:s3:::cpr-production-document-cache/*",
+                        ],
+                        "Sid": "VisualEditor0",
+                    }
                 ],
-                "Effect": "Allow",
-                "Resource": [
-                    "arn:aws:s3:::cpr-production-document-cache",
-                    "arn:aws:s3:::cpr-production-document-cache/*"
-                ],
-                "Sid": "VisualEditor0"
-            }]
+            },
         }
-    }],
+    ],
     name="apprunner-concepts-api-instance-role",
-    opts=pulumi.ResourceOptions(protect=True))
+    opts=pulumi.ResourceOptions(protect=True),
+)
 
-concepts_api = aws.apprunner.Service("concepts-api",
+concepts_api = aws.apprunner.Service(
+    "concepts-api",
     auto_scaling_configuration_arn="arn:aws:apprunner:eu-west-1:532586131621:autoscalingconfiguration/DefaultConfiguration/1/00000000000000000000000000000001",
     health_check_configuration={
         "interval": 10,
@@ -88,4 +94,5 @@ concepts_api = aws.apprunner.Service("concepts-api",
             "source_directory": "/",
         },
     },
-    opts = pulumi.ResourceOptions(protect=True))
+    opts=pulumi.ResourceOptions(protect=True),
+)

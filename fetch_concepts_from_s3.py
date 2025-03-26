@@ -1,11 +1,12 @@
-import boto3
 import os
+
+import boto3
 
 os.makedirs("./s3-concepts", exist_ok=True)
 
 s3 = boto3.client("s3")
 
-paginator = s3.get_paginator('list_objects_v2')
+paginator = s3.get_paginator("list_objects_v2")
 pages = paginator.paginate(Bucket="cpr-production-document-cache", Prefix="concepts")
 
 for page in pages:
