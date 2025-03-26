@@ -1,0 +1,26 @@
+name: Pull request
+on: pull_request
+permissions: read-all
+
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
+    permissions:
+      # For trunk to post annotations
+      checks: write
+      # For repo checkout
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read Python version from pyproject.toml
+        id: python-version
+        run: |
+          version=$(grep 'requires-python' pyproject.toml | sed -E 's/.*">=(.*?)".*/\1/')
+          echo "version=$version" >> $GITHUB_OUTPUT
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ steps.python-version.outputs.version }}
+      - run: pip install -r requirements.txt
+      - uses: trunk-io/trunk-action@v1
+        with:
+          arguments: --ci
