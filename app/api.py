@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from typing import List, Optional
 
 import duckdb
-from fastapi import APIRouter, FastAPI, HTTPException, Query
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query
 from pydantic import BaseModel, Field
 
 # Global connection variable
@@ -147,7 +147,7 @@ class BatchSearchModel(BaseModel):
 
 
 @router.get("/batch_search")
-async def batch_search_concepts(dto: BatchSearchModel):
+async def batch_search_concepts(dto: BatchSearchModel = Depends()):
     """Search for multiple concepts by their wikibase IDs.
 
     :param ids: List of wikibase IDs to search for
