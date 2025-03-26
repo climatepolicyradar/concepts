@@ -10,3 +10,9 @@ data in a single query, and also allows us to query the data in parallel.
 brew install uv
 uv sync
 ```
+
+## Run the API
+
+```bash
+source entrypoint.sh
+```
