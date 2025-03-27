@@ -182,6 +182,7 @@ dependencies = [
     { name = "pulumi" },
     { name = "pulumi-aws" },
     { name = "pyramid" },
+    { name = "pyyaml" },
     { name = "requests" },
 ]
 
@@ -194,6 +195,7 @@ requires-dist = [
     { name = "pulumi", specifier = ">=3.150.0" },
     { name = "pulumi-aws", specifier = ">=6.69.0" },
     { name = "pyramid", specifier = ">=2.0.2" },
+    { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "requests", specifier = ">=2.32.3" },
 ]
 

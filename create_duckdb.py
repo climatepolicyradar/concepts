@@ -213,7 +213,9 @@ def main():
 
     if missing_concepts:
         print(
-            f"Done. Found {len(missing_concepts)} missing concept IDs:\n- {'\n- '.join(sorted(missing_concepts))}"
+            "Done. Found {} missing concept IDs:\n- {}".format(
+                len(missing_concepts), "\n- ".join(sorted(missing_concepts))
+            )
         )
     print("Finished creating DuckDB database")
 

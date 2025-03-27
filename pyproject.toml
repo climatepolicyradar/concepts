@@ -12,5 +12,6 @@ dependencies = [
   "pulumi>=3.150.0",
   "pulumi-aws>=6.69.0",
   "pyramid>=2.0.2",
+  "pyyaml>=6.0.2",
   "requests>=2.32.3",
 ]
