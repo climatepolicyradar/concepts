@@ -3,7 +3,6 @@ s3-concepts/
 concepts.db
 push_to_ecr.sh
 .python-version
-.trunk/
 .venv/
 .poetry/
 .venv/
