@@ -38,6 +38,7 @@ python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
 python-multipart==0.0.20
 pyyaml==6.0.2
+requests==2.32.0
 rich==13.9.4
 rich-toolkit==0.13.2
 rsa==4.7.2
